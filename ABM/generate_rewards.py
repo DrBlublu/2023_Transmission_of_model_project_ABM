@@ -1,5 +1,5 @@
 """
-Utiliy module providing a single function for the create a reward based on the two-step task
+Utility module providing a single function to create a distribution of rewards based on the two-step task
 For a reference for the task, see:
 https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005090
 """
