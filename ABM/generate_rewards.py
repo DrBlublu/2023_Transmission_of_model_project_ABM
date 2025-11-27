@@ -18,7 +18,7 @@ def generate_rewards(n_trials, bounds, init_vals, drift_rate):
         drift_rate (float): Standard deviation of Gaussian noise added per trial.
 
     Returns:
-        np.ndarray: Array of shape (n_trials, 2) with reward probabilities.
+        reward_probs (np.ndarray): Array of shape (n_trials, 2) with reward probabilities.
     """
     # Pre-allocate reward probabilities with neutral starting value
     reward_probs = np.ones((n_trials, 2)) * 0.5

@@ -15,13 +15,11 @@ def test_state1_distribution():
     n_trials = 20
     n_state1 = 4
     n_state2 = 2
-    bounds=[0, 9]
-    init_vals=[4, 6]
-    drift_rate=2
+    bounds = [0, 9]
+    init_vals = [4, 6]
+    drift_rate = 2
 
-    df_trial = generate_trials(
-        n_trials, n_state1, n_state2, bounds, init_vals, drift_rate
-    )
+    df_trial = generate_trials(n_trials, n_state1, n_state2, bounds, init_vals, drift_rate)
 
     for state in range(n_state1):
         assert len(df_trial[df_trial.state1 == state]) == n_trials / n_state1
@@ -38,12 +36,10 @@ def test_n_trial():
     n_trials = 20
     n_state1 = 4
     n_state2 = 2
-    bounds=[0, 9]
-    init_vals=[4, 6]
-    drift_rate=2
+    bounds = [0, 9]
+    init_vals = [4, 6]
+    drift_rate = 2
 
-    df_trial = generate_trials(
-        n_trials, n_state1, n_state2, bounds, init_vals, drift_rate
-    )
+    df_trial = generate_trials(  n_trials, n_state1, n_state2, bounds, init_vals, drift_rate)
 
     assert df_trial.shape[0] == n_trials
