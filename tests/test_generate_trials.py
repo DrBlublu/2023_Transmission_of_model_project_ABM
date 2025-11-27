@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 from ABM.generate_trials import generate_trials
 
+
 def test_state1_distribution():
     """
     Test the distribution of first state.
@@ -17,37 +18,14 @@ def test_state1_distribution():
     bounds=[0, 9]
     init_vals=[4, 6]
     drift_rate=2
-    stakes_value = [1, 5]
 
     df_trial = generate_trials(
-        n_trials, n_state1, n_state2, bounds, init_vals, drift_rate, stakes_value
+        n_trials, n_state1, n_state2, bounds, init_vals, drift_rate
     )
 
     for state in range(n_state1):
         assert len(df_trial[df_trial.state1 == state]) == n_trials / n_state1
 
-def test_stake_distribution():
-    """
-    Test the distribution of stake.
-    The distribution should be equally reparted,
-      len(df_trial[df_trial.stake == stake]) == n_trials / len(stakes_value), where
-      len(df_trial[df_trial.stake == stake]) is the number of stake of a certain value, and
-      n_trials / len(stakes_value) is the intended repartition stake.
-    """
-    n_trials = 20
-    n_state1 = 4
-    n_state2 = 2
-    bounds=[0, 9]
-    init_vals=[4, 6]
-    drift_rate=2
-    stakes_value = [1, 5]
-
-    df_trial = generate_trials(
-        n_trials, n_state1, n_state2, bounds, init_vals, drift_rate, stakes_value
-    )
-
-    for stake in stakes_value:
-        assert len(df_trial[df_trial.stake == stake]) == n_trials / len(stakes_value)
 
 def test_n_trial():
     """
@@ -63,10 +41,9 @@ def test_n_trial():
     bounds=[0, 9]
     init_vals=[4, 6]
     drift_rate=2
-    stakes_value = [1, 5]
 
     df_trial = generate_trials(
-        n_trials, n_state1, n_state2, bounds, init_vals, drift_rate, stakes_value
+        n_trials, n_state1, n_state2, bounds, init_vals, drift_rate
     )
 
     assert df_trial.shape[0] == n_trials
