@@ -38,7 +38,8 @@ def compute_arbitration_weight(
     model_perf: Dict[str, np.ndarray],
     state1: int,
     p_mb: np.ndarray,
-    p_mf: np.ndarray
+    p_mf: np.ndarray,
+    fixed_w: float = None
 ) -> np.ndarray:
     """
     Compute arbitration weight between model-based and model-free systems.
@@ -49,11 +50,15 @@ def compute_arbitration_weight(
         state1 (int): Current state 1 index.
         p_mb (np.ndarray): Softmax probabilities from model-based Q-values.
         p_mf (np.ndarray): Softmax probabilities from model-free Q-values.
+        fixed_w (float): A fix value of model basedness.
 
     Returns:
         p (np.ndarray): Weighted choice probabilities.
     """
-    w = 1 / (1 + np.exp(-parameters["n0"] * (model_perf["based"][state1] - model_perf["free"][state1]) + parameters["n1"]))
+    if fixed_w is not None:
+        w = fixed_w
+    else:
+        w = 1 / (1 + np.exp(-parameters["n0"] * (model_perf["based"][state1] - model_perf["free"][state1]) + parameters["n1"]))
     p = w * p_mb + (1 - w) * p_mf
     return p
 
@@ -193,7 +198,7 @@ def update_model_performance(
 
 
 
-def run_single_trial(state1, rewards, parameters, transition_function, qvalues, model_perf):
+def run_single_trial(state1, rewards, parameters, transition_function, qvalues, model_perf, fixed_w = None):
     """
     Run a single trial of the arbitration model.
 
@@ -213,7 +218,7 @@ def run_single_trial(state1, rewards, parameters, transition_function, qvalues, 
 
     # Compute probabilities
     p_mb, p_mf = compute_q_values(transition_function, state1, qvalues, parameters)
-    p = compute_arbitration_weight(parameters, model_perf, state1, p_mb, p_mf)
+    p = compute_arbitration_weight(parameters, model_perf, state1, p_mb, p_mf, fixed_w)
 
     # Make choice and compute reward
     choice = make_choice(p)

@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from ABM.generate_rewards import generate_rewards
 
 def test_bounds():
