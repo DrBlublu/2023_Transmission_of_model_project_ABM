@@ -31,8 +31,6 @@ def mb_mf_subject_arbitration(df, transition_function, n0=6, n1=-0.2,
     # Initialize arrays
     choices = np.zeros(n_trials)
     scores = np.zeros(n_trials)
-    spe = np.zeros(n_trials)  # state prediction errors
-    rpe = np.zeros(n_trials)  # reward prediction errors
 
     # Extract rewards, stakes, and states
     rewards = df[['rew_1', 'rew_2']].values

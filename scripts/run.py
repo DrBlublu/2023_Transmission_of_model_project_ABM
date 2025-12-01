@@ -2,12 +2,14 @@
 a
 """
 
+from multiprocessing import Pool
+import itertools
 import numpy as np
 import pandas as pd
-from tqdm import trange
 from ABM.generate_trials import generate_trials
 from ABM.run_single_trial import run_single_trial
 from ABM.init_transition_function import init_transition_function
+
 
 n_sim = 100
 n_trials = 256
@@ -19,58 +21,65 @@ drift_rate = 2
 
 parameters = {
     "alpha": 0.2,
-    "alpha_performance": 0.3,
-    "beta": 1.0,
+    "alpha_performance": 0.4,
+    "beta": 2.1,
     "trace": 0.4,
-    "n0": 6,
-    "n1": 0.2
+    "n0": 6.6,
+    "n1": 0
 }
 
-qvalues = {
-    "qmf1": np.zeros((4,2)) + 4.5,
-    "qmf2": np.full(2, 4.5),
-    "qmb": np.full(2, 4.5),
-}
+# Precompute transition functions and weights
+l_fixed_w = np.arange(0.0, 1.01, 0.01)
+l_transition_function = [init_transition_function(w) for w in l_fixed_w]
 
-model_perf = {
-    "based": np.zeros(4) + 4.5,
-    "free": np.zeros(4) + 4.5
-}
+results = []
 
-l_transition_function = []
-l_fixed_w = []
-
-for i in np.arange(0.0, 1.0, 0.01):
-    l_transition_function.append(init_transition_function(i))
-    l_fixed_w.append(i)
-
-data = []
-
-for sim in trange(n_sim):
+def run_simulation(sim_id):
+    """
+    Run a single simulation of combination of transition function and fixed w.
+    """
     df_trial = generate_trials(n_trials, n_state1, n_state2, bounds, init_vals, drift_rate)
-    for transition_function in l_transition_function:
-        for fixed_w in l_fixed_w:
-            total_reward = []
-            for row in df_trial.itertuples(index=True):
-                rewards = (row.rew_1, row.rew_2)
-                state1 = row.state1
-                reward, qvalues, model_perf = run_single_trial(
-                    state1, rewards, parameters, transition_function, qvalues, model_perf, fixed_w
-                )
-                total_reward.append(reward)
+    rewards_array = df_trial[["rew_1", "rew_2"]].to_numpy()
+    states_array = df_trial["state1"].to_numpy()
+    baseline = rewards_array.mean()
 
-            avg_reward = np.mean(total_reward)
-            baseline = df_trial[["rew_1", "rew_2"]].to_numpy().mean()
+    sim_results = []
+    for transition_function, fixed_w in itertools.product(l_transition_function, l_fixed_w):
+        # Reset qvalues and model_perf here
+        qvalues = {
+            "qmf1": np.zeros((4,2)) + 4.5,
+            "qmf2": np.full(2, 4.5),
+            "qmb": np.full(2, 4.5),
+        }
+        model_perf = {
+            "based": np.zeros(4) + 4.5,
+            "free": np.zeros(4) + 4.5
+        }
 
-            perf = avg_reward - baseline
-            model_knowledge = (transition_function[:, 0, 0] + transition_function[:, 1, 1]).mean() / 2 * 100
+        trial_rewards = []
+        for state1, rewards in zip(states_array, rewards_array):
+            reward, qvalues, model_perf = run_single_trial(
+                state1, tuple(rewards), parameters, transition_function, qvalues, model_perf, fixed_w
+            )
+            trial_rewards.append(reward)
 
-            data.append({
-                "sim": sim,
-                "model_knowledge": model_knowledge,
-                "w": fixed_w,
-                "perf": perf
-            })
+        avg_reward = np.mean(trial_rewards)
+        perf = avg_reward - baseline
+        model_knowledge = (transition_function[:, 0, 0] + transition_function[:, 1, 1]).mean() / 2 * 100
 
-df = pd.DataFrame(data)
-df.to_csv("data/results.csv", index=False)
+        sim_results.append({
+            "sim": sim_id,
+            "model_knowledge": model_knowledge,
+            "w": fixed_w,
+            "perf": perf
+        })
+    return sim_results
+
+if __name__ == "__main__":
+    with Pool(processes=12) as pool:
+        all_results = pool.map(run_simulation, range(n_sim))
+
+    results = [item for sublist in all_results for item in sublist]
+
+    df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf"])
+    df.to_csv("data/results.csv", index=False)
