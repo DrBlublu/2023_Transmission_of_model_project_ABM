@@ -19,6 +19,7 @@ bounds = [0, 9]
 init_vals = [4, 6]
 drift_rate = 2
 
+# Parameters are based on participant parameter estimations (see parameter_extraction.ipynb)
 parameters = {
     "alpha": 0.2,
     "alpha_performance": 0.4,
@@ -82,4 +83,4 @@ if __name__ == "__main__":
     results = [item for sublist in all_results for item in sublist]
 
     df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf"])
-    df.to_csv("data/results.csv", index=False)
+    df.to_csv("data/simuation_results.csv", index=False)
