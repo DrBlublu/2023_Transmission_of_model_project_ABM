@@ -1,12 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-
-def parent_transmission(agents: pd.DataFrame, noise_std: float) -> tuple:
-    noise = np.random.normal(0, noise_std, agents.shape[0])
-    children_model_knowledge = np.clip(agents["model_knowledge"] + noise, 0, 1)
-    children_w = np.clip(agents["w"] + noise, 0, 1)
-    return children_model_knowledge, children_w
+from ABM.parent_transmission import parent_transmission
 
 
 def test_parent_transmission_shapes_and_types():

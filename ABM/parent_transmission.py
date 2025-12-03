@@ -4,7 +4,6 @@ to children.
 """
 
 
-from ABM.init_population import init_population
 import numpy as np
 import pandas as pd
 
