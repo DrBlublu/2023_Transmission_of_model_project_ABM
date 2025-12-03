@@ -18,7 +18,7 @@ def test_init_population_shape_and_columns():
     pop = init_population(n, model_knowledge_param, w_param)
 
     assert pop.shape[0] == n
-    assert set(pop.columns) == {"id", "model_knowledge", "w"}
+    assert set(pop.columns) == {"id", "gen", "model_knowledge", "w"}
 
 
 def test_init_population_w_in_bounds():

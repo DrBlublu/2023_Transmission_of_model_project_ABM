@@ -66,7 +66,7 @@ def run_simulation(sim_id):
 
         avg_reward = np.mean(trial_rewards)
         perf = avg_reward - baseline
-        model_knowledge = (transition_function[:, 0, 0] + transition_function[:, 1, 1]).mean() / 2 * 100
+        model_knowledge = (transition_function[:, 0, 0] + transition_function[:, 1, 1]).mean() / 2
 
         sim_results.append({
             "sim": sim_id,

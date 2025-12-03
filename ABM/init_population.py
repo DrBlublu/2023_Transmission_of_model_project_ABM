@@ -28,6 +28,7 @@ def init_population(n, model_knowledge_param, w_param):
     pop_w = 1 / (1 + np.exp(-raw_w))  # sigmoid transform
     pop = pd.DataFrame({
         "id": [f"g0n{i}" for i in range(n)],
+        "gen": np.zeros(n),
         "model_knowledge": pop_model_knowledge,
         "w": pop_w
     })
