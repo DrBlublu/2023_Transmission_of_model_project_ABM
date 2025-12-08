@@ -29,8 +29,11 @@ def init_population(n, model_knowledge_param, w_param):
     pop = pd.DataFrame({
         "id": [f"g0n{i}" for i in range(n)],
         "gen": np.zeros(n),
-        "parent_id": [f"fake_parent_{i}" for i in range(n)],
         "model_knowledge": pop_model_knowledge,
-        "w": pop_w
+        "w": pop_w,
+        "parent_id": [f"fake_parent_{i}" for i in range(n)],
+        "parent_model_knowledge": np.random.normal(0, 1, n),
+        "parent_w": np.random.normal(0, 1, n),
+        "parent_perf": np.random.normal(0, 1, n)
     })
     return pop
