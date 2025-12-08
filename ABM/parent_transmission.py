@@ -23,7 +23,7 @@ def parent_transmission(agents: pd.DataFrame, noise_std: float) -> tuple:
     """
     noise = np.random.normal(0, noise_std, agents.shape[0])
 
-    children_model_knowledge = np.clip(agents["model_knowledge"] + noise, 0, 1)
-    children_w = np.clip(agents["w"] + noise, 0, 1)
+    children_model_knowledge = np.clip(agents["model_knowledge"] + noise, 0, 1).round(2)
+    children_w = np.clip(agents["w"] + noise, 0, 1).round(2)
 
     return children_model_knowledge, children_w
