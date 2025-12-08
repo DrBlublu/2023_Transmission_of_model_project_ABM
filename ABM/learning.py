@@ -25,8 +25,8 @@ def learning(model_knowledge: float, w: float, param_learning: dict) -> tuple:
     """
     if random.random() <= param_learning["p_model_knowledge"]:
         model_knowledge_change = np.random.normal(0, param_learning["sd_model_knowledge"])
-        model_knowledge = np.clip(model_knowledge + model_knowledge_change, 0, 1)
+        model_knowledge = np.clip(model_knowledge + model_knowledge_change, 0, 1).round(2)
     if random.random() <= param_learning["p_w"]:
         w_change = np.random.normal(0, param_learning["sd_w"])
-        w = np.clip(w + w_change, 0, 1)
+        w = np.clip(w + w_change, 0, 1).round(2)
     return model_knowledge, w
