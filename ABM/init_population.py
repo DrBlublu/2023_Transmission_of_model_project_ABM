@@ -24,10 +24,10 @@ def init_population(n, model_knowledge_param, w_param):
         model_knowledge_param["sd"],
         n
     )
-    pop_model_knowledge = 1 / (1 + np.exp(-raw_model_knowledge))
+    pop_model_knowledge = np.clip(raw_model_knowledge, 0, 1)
     pop_model_knowledge = pop_model_knowledge.round(2)
     raw_w = np.random.normal(w_param["mean"], w_param["sd"], n)
-    pop_w = 1 / (1 + np.exp(-raw_w))  # sigmoid transform
+    pop_w = np.clip(raw_w, 0, 1)
     pop_w = pop_w.round(2)
     pop = pd.DataFrame({
         "id": [f"g0n{i}" for i in range(n)],
