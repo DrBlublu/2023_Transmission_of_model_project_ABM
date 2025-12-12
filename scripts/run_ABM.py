@@ -20,9 +20,9 @@ N_GEN = 10
 N = 100
 K = 4
 model_knowledge_param = {"mean": 0.04, "sd": 0.15}
-w_param = {"mean": 0.2, "sd": 0.14}
-TRANSMISSION_NOISE = 0.7
-param_learning = {"p_model_knowledge": 0.01, "sd_model_knowledge": 0.1, "p_w": 0.01, "sd_w": 0.1}
+w_param = {"mean": 0.5, "sd": 0.14}
+beta_params = {"alpha": 0, "beta": 1}
+param_learning = {"p_model_knowledge": 0.2, "sd_model_knowledge": 0.1, "p_w": 0.2, "sd_w": 0.1}
 
 data = pd.DataFrame()
 
@@ -33,7 +33,7 @@ for sim in range(N_SIM):
     for gen in range(N_GEN):
         if gen != 0:
             children = create_new_gen(parent_values, gen, N)
-            children["model_knowledge"], children["w"] = parent_transmission(children, TRANSMISSION_NOISE)
+            children["model_knowledge"], children["w"] = parent_transmission(children, beta_params)
             children["model_knowledge"], children["w"] = learning(children["model_knowledge"], children["w"], param_learning)
             pop = children.copy()
         perfs = []

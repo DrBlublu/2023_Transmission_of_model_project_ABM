@@ -83,4 +83,4 @@ if __name__ == "__main__":
     results = [item for sublist in all_results for item in sublist]
 
     df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf"])
-    df.to_csv("data/simuation_results.csv", index=False)
+    df.to_csv("data/simuation_results2.csv", index=False)
