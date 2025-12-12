@@ -1,0 +1,127 @@
+---
+title: "analysis"
+author: "Blublu"
+date: "2025-12-12"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(patchwork)
+```
+
+
+```{r}
+df <- read.csv("../data/test_run.csv")
+```
+
+
+```{r}
+df_mean <- df %>%
+  group_by(gen) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "average") %>%
+  mutate(sim = NA)
+
+df_sim <- df %>%
+  group_by(sim, gen) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "sim")
+
+```
+
+
+
+```{r}
+p_perf <- df_sim %>%
+  ggplot( aes(x = gen+1, y = perf, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen+1, y = perf), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Task Performance",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(-0.5, 0.5),
+    breaks = seq(-0.5, 0.5, by = 0.50),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal()
+
+
+p_model_knowledge <- df_sim %>%
+  ggplot( aes(x = gen+1, y = model_knowledge, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen+1, y = model_knowledge), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Model Knowledge",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.50),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal()
+
+
+p_w <- df_sim %>%
+  ggplot( aes(x = gen+1, y = w, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen+1, y = w), size = 2) +
+  labs(
+    x = "Generation",
+    y = "W",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.50),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal()
+
+
+p_perf + p_model_knowledge / p_w
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

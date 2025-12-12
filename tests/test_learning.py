@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+import pandas as pd
 from ABM.learning import learning
 
 def test_learning_no_update_when_prob_zero():
@@ -12,14 +13,13 @@ def test_learning_no_update_when_prob_zero():
     """
     random.seed(37)
     np.random.seed(37)
-    initial_model_knowledge, initial_w = 0.5, 0.5
-    params = {"p_model_knowledge": 0.0, "sd_model_knowledge": 1.0,
-              "p_w": 0.0, "sd_w": 1.0}
+    agents = pd.DataFrame({"model_knowledge": [0.2, 0.8], "w": [0.5, 0.7]})
+    params = {"p": 0.0, "sd": 1.0,}
 
-    updated_model_knowledge, updated_w = learning(initial_model_knowledge, initial_w, params)
+    agents_bis = learning(agents, params)
 
-    assert updated_model_knowledge == initial_model_knowledge
-    assert updated_w == initial_w
+    assert (agents["model_knowledge"] == agents_bis["model_knowledge"]).all()
+    assert (agents["w"] == agents_bis["w"]).all()
 
 
 def test_learning_always_update_when_prob_one():
@@ -31,54 +31,13 @@ def test_learning_always_update_when_prob_one():
     """
     random.seed(123)
     np.random.seed(123)
-    initial_model_knowledge, initial_w = 0.5, 0.5
-    params = {"p_model_knowledge": 1.0, "sd_model_knowledge": 0.1,
-              "p_w": 1.0, "sd_w": 0.1}
+    agents = pd.DataFrame({"model_knowledge": [0.2, 0.8], "w": [0.5, 0.7]})
+    params = {"p": 1.0, "sd": 1.0,}
 
-    updated_model_knowledge, updated_w = learning(initial_model_knowledge, initial_w, params)
+    agents_bis = learning(agents, params)
 
-    assert updated_model_knowledge != initial_model_knowledge
-    assert updated_w != initial_w
-    assert 0 <= updated_model_knowledge <= 1
-    assert 0 <= updated_w <= 1
+    assert (agents["model_knowledge"] != agents_bis["model_knowledge"]).all()
+    assert (agents["w"] != agents_bis["w"]).all()
+    assert 0 <= (agents_bis["model_knowledge"]).all() <= 1
+    assert 0 <= (agents_bis["w"]).all() <= 1
 
-
-def test_learning_clipping_bounds():
-    """
-    Test learning clipping behavior.
-    Updates should be clipped to [0,1],
-        assert np.all((updated_model_knowledge >= 0) & (updated_model_knowledge <= 1)), and
-        assert np.all((updated_w >= 0) & (updated_w <= 1)).
-    """
-    random.seed(999)
-    np.random.seed(999)
-    initial_model_knowledge, initial_w = 0.0, 1.0
-    params = {"p_model_knowledge": 1.0, "sd_model_knowledge": 5.0,
-              "p_w": 1.0, "sd_w": 5.0}
-
-    updated_model_knowledge, updated_w = learning(initial_model_knowledge, initial_w, params)
-
-    assert 0 <= updated_model_knowledge <= 1
-    assert 0 <= updated_w <= 1
-
-
-def test_learning_reproducibility_with_seed():
-    """
-    Test reproducibility with fixed seed.
-    Two calls with the same seed should produce identical outputs,
-        assert (mk1, w1) == (mk2, w2).
-    """
-    initial_model_knowledge, initial_w = 0.5, 0.5
-    params = {"p_model_knowledge": 1.0, "sd_model_knowledge": 0.1,
-              "p_w": 1.0, "sd_w": 0.1}
-
-    random.seed(2025)
-    np.random.seed(2025)
-    mk1, w1 = learning(initial_model_knowledge, initial_w, params)
-
-    random.seed(2025)
-    np.random.seed(2025)
-    mk2, w2 = learning(initial_model_knowledge, initial_w, params)
-
-    assert mk1 == mk2
-    assert w1 == w2

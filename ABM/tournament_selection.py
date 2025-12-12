@@ -22,7 +22,7 @@ def tournament_selection(parents, k=4):
 
     for _ in range(parents.shape[0]):
         # Sample candidate IDs
-        candidates = np.random.choice(parents["id"].values, k, replace=True)
+        candidates = np.random.choice(parents["id"].values, k, replace=False)
 
         # Get candidate rows and sort by performance
         perf = parents[parents["id"].isin(candidates)].sort_values(

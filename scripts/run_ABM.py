@@ -19,22 +19,21 @@ N_SIM = 50
 N_GEN = 10
 N = 100
 K = 4
-model_knowledge_param = {"mean": 0.04, "sd": 0.15}
+model_knowledge_param = {"mean": 0.52, "sd": 0.07}
 w_param = {"mean": 0.5, "sd": 0.14}
-beta_params = {"alpha": 0, "beta": 1}
-param_learning = {"p_model_knowledge": 0.2, "sd_model_knowledge": 0.1, "p_w": 0.2, "sd_w": 0.1}
+beta_params = {"alpha": 5, "beta": 1}
+param_learning = {"p": 1, "sd": 0.4}
 
 data = pd.DataFrame()
 
-pop = init_population(N, model_knowledge_param, w_param)
-
 for sim in range(N_SIM):
+    pop = init_population(N, model_knowledge_param, w_param)
     data_sim = pd.DataFrame()
     for gen in range(N_GEN):
         if gen != 0:
             children = create_new_gen(parent_values, gen, N)
             children["model_knowledge"], children["w"] = parent_transmission(children, beta_params)
-            children["model_knowledge"], children["w"] = learning(children["model_knowledge"], children["w"], param_learning)
+            children = learning(children, param_learning)
             pop = children.copy()
         perfs = []
         for _, agent in pop.iterrows():
@@ -42,7 +41,7 @@ for sim in range(N_SIM):
             perfs.append(perf)
         pop["perf"] = perfs
         data_sim = pd.concat([data_sim, pop.copy()], ignore_index=True)
-        parent_model_knowledge, parent_w, parent_id = tournament_selection(pop, N)
+        parent_model_knowledge, parent_w, parent_id = tournament_selection(pop, K)
         parent_values = {
             "id": parent_id,
             "model_knowledge": parent_model_knowledge,
@@ -50,6 +49,6 @@ for sim in range(N_SIM):
             "perf": perfs
         }
     data_sim["sim"] = sim
-    data =pd.concat([data, data_sim.copy()], ignore_index=True)
+    data = pd.concat([data, data_sim.copy()], ignore_index=True)
 
 data.to_csv("data/test_run.csv", index=False)
