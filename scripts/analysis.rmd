@@ -114,6 +114,13 @@ p_perf + p_model_knowledge / p_w
 ```
 
 
+```{r}
+df_mean %>%
+  ggplot() +
+  geom_line(aes(x = gen, y = perf), color = "blue") +
+  geom_line(aes(x = gen, y = model_knowledge), color = "red") +
+  geom_line(aes(x = gen, y = w), color = "green")
+```
 
 
 

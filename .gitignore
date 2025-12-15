@@ -2,3 +2,4 @@ docs/old_ABM_jupyter.ipynb
 docs/center-for-humans-and-machines-reward
 scripts/test.ipynb
 *.egg-info
+data/ABM_results.csv
