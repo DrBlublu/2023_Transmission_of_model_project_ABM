@@ -79,8 +79,7 @@ def run_simulation(sim_id):
             "perf": perf,
             "perf_stake": perf_stake,
             "baseline_reward": baseline,
-            "avg_reward": avg_reward,
-            "stake": stakes_array
+            "avg_reward": avg_reward
         })
     return sim_results
 
@@ -90,5 +89,5 @@ if __name__ == "__main__":
 
     results = [item for sublist in all_results for item in sublist]
 
-    df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf", "perf_stake", "baseline_reward", "avg_reward", "stake"])
+    df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf", "perf_stake", "baseline_reward", "avg_reward"])
     df.to_csv("data/simulation_results.csv", index=False)

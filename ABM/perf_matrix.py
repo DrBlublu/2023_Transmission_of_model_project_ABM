@@ -18,7 +18,7 @@ def transform_simulation_results(source_filename, output_filename):
     df = pd.read_csv(f"data/{source_filename}.csv")
 
     df_matrix = (
-    df.groupby(["model_knowledge", "w"], as_index=False)["perf"]
+    df.groupby(["model_knowledge", "w"], as_index=False)["perf_stake"]
       .mean()
       .assign(
           model_knowledge=lambda d: d["model_knowledge"].round(2),
