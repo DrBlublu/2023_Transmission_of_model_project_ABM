@@ -24,19 +24,24 @@ def generate_trials(n_trials, n_state1, n_state2, bounds, init_vals, drift_rate)
         pd.DataFrame: DataFrame containing trial information and reward.
     """
     # Initialize DataFrame and arrays for trial components
-    df_trials = pd.DataFrame(columns=['n_trial', 'state1'])
+    df_trials = pd.DataFrame(columns=["n_trial", "state1"])
 
     # Generate drifting reward
     rewards = generate_rewards(n_trials, bounds, init_vals, drift_rate)
 
+    # Add the stakes
+    stake_values = np.array([5] * (n_trials // 2) + [1] * (n_trials - n_trials // 2))
+    np.random.shuffle(stake_values)
+
     # Populate DataFrame with trial data
-    df_trials['n_trial'] = np.arange(1, n_trials + 1)
+    df_trials["n_trial"] = np.arange(1, n_trials + 1)
     states = np.tile(np.arange(0, n_state1), int(n_trials/n_state1))
     np.random.shuffle(states)
-    df_trials['state1'] = states
+    df_trials["state1"] = states
+    df_trials["stake"] = stake_values
 
     # Add rewards for each state
     for state in range(n_state2):
-        df_trials[f'rew_{state + 1}'] = rewards[:, state]
+        df_trials[f"rew_{state + 1}"] = rewards[:, state]
 
     return df_trials

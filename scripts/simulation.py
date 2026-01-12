@@ -33,7 +33,6 @@ parameters = {
 l_fixed_w = np.arange(0.0, 1.01, 0.01)
 l_transition_function = [init_transition_function(w) for w in l_fixed_w]
 
-results = []
 
 def run_simulation(sim_id):
     """
@@ -43,6 +42,7 @@ def run_simulation(sim_id):
     rewards_array = df_trial[["rew_1", "rew_2"]].to_numpy()
     states_array = df_trial["state1"].to_numpy()
     baseline = rewards_array.mean()
+    stakes_array = df_trial["stake"].to_numpy()
 
     sim_results = []
     for transition_function, fixed_w in itertools.product(l_transition_function, l_fixed_w):
@@ -68,11 +68,19 @@ def run_simulation(sim_id):
         perf = avg_reward - baseline
         model_knowledge = (transition_function[:, 0, 0] + transition_function[:, 1, 1]).mean() / 2
 
+        avg_reward_stake = np.mean(trial_rewards*stakes_array)
+        baseline_stake = (rewards_array * stakes_array[:, None]).mean()
+        perf_stake = avg_reward_stake - baseline_stake
+
         sim_results.append({
             "sim": sim_id,
             "model_knowledge": model_knowledge,
             "w": fixed_w,
-            "perf": perf
+            "perf": perf,
+            "perf_stake": perf_stake,
+            "baseline_reward": baseline,
+            "avg_reward": avg_reward,
+            "stake": stakes_array
         })
     return sim_results
 
@@ -82,5 +90,5 @@ if __name__ == "__main__":
 
     results = [item for sublist in all_results for item in sublist]
 
-    df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf"])
-    df.to_csv("data/simuation_results2=.csv", index=False)
+    df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf", "perf_stake", "baseline_reward", "avg_reward", "stake"])
+    df.to_csv("data/simulation_results.csv", index=False)
