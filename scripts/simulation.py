@@ -20,6 +20,8 @@ init_vals = [4, 6]
 drift_rate = 2
 
 # Parameters are based on participant parameter estimations (see parameter_extraction.ipynb)
+
+## Overal parameter
 parameters = {
     "alpha": 0.2,
     "alpha_performance": 0.4,
@@ -28,6 +30,7 @@ parameters = {
     "n0": 6.6,
     "n1": 0
 }
+
 
 # Precompute transition functions and weights
 l_fixed_w = np.arange(0.0, 1.01, 0.01)
@@ -90,4 +93,4 @@ if __name__ == "__main__":
     results = [item for sublist in all_results for item in sublist]
 
     df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf", "perf_stake", "baseline_reward", "avg_reward"])
-    df.to_csv("data/simulation_results.csv", index=False)
+    df.to_csv("data/simulation_language_results.csv", index=False)

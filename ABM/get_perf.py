@@ -18,7 +18,7 @@ def get_perf(perf_matrix, agent_model_knowledge, agent_w):
 
     perf = perf_matrix.loc[
         (perf_matrix["model_knowledge"] == agent_model_knowledge) & (perf_matrix["w"] == agent_w),
-        ["perf"]
+        ["perf_stake"]
         ].values[0][0]
 
     return perf

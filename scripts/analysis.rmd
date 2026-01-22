@@ -12,13 +12,192 @@ library(patchwork)
 
 
 ```{r}
-df <- read.csv("../data/test_run.csv")
+df <- read.csv("../data/ABM_results.csv")
+```
+
+```{r}
+df_sub <- df[1:1000, ]
+```
+
+
+
+
+
+
+
+# distribution
+
+```{r}
+df %>%
+  # filter(alpha == 3, beta == 1) %>%
+  ggplot( aes(x = as.factor(gen), y = perf)) +
+  geom_boxplot()
+  
+```
+
+
+# p (probability of learning)
+
+```{r}
+df_plot <- df %>%
+  group_by(gen, p) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(gen = gen + 1)
 ```
 
 
 ```{r}
-df_mean <- df %>%
-  group_by(gen) %>%
+df_plot %>%
+  ggplot( aes(x = gen, y = perf, colour = factor(p), group = p)) +
+  geom_line() +
+  geom_text( data = . %>% filter(gen == 10), aes(label = p), hjust = -0.1, show.legend = FALSE ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  labs(
+    title = "Impact of learning probability (p)",
+    y = "Task performance",
+    x = "Generation",
+    colour = "Probability of learning"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+
+# sd (variation of learning)
+
+```{r}
+df_plot <- df %>%
+  group_by(gen, sd) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(gen = gen + 1)
+```
+
+
+```{r}
+df_plot %>%
+  ggplot( aes(x = gen, y = perf, colour = factor(sd), group = sd)) +
+  geom_line() +
+  geom_text( data = . %>% filter(gen == 10), aes(label = sd), hjust = -0.1, show.legend = FALSE ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  labs(
+    title = "Impact of learning variance (sd)",
+    y = "Task performance",
+    x = "Generation",
+    colour = "Probability of learning"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+# noise distribution
+
+```{r}
+df_plot <- df %>%
+  group_by(alpha, beta) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  )
+df_plot <- df_plot %>% 
+  mutate(transmission_quality = alpha / (alpha + beta))
+```
+
+```{r}
+df_plot %>%
+  ggplot(aes(x = transmission_quality, y = perf)) +
+  geom_point() +
+  geom_smooth()
+
+```
+
+
+```{r}
+df_plot %>%
+  ggplot( aes(x = beta, y = alpha, fill = perf)) +
+  geom_tile()
+```
+
+
+
+```{r}
+df_plot %>%
+  ggplot( aes(x = gen, y = perf)) +
+  geom_line() +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  labs(
+    y = "Task performance",
+    x = "Generation"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  facet_grid(alpha ~ beta, labeller = label_both)
+
+df_plot %>%
+  ggplot( aes(x = gen, y = w)) +
+  geom_line() +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  labs(
+    y = "w",
+    x = "Generation"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  facet_grid(alpha ~ beta, labeller = label_both)
+
+df_plot %>%
+  ggplot( aes(x = gen, y = model_knowledge)) +
+  geom_line() +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  labs(
+    y = "Model Knowledge",
+    x = "Generation"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  facet_grid(alpha ~ beta, labeller = label_both)
+```
+
+
+# Lock p, alpha, beta (sd is moving)
+
+
+```{r}
+df_spec <- df %>%
+  filter(p == 1, beta == 1, alpha == 5) %>%
+  mutate(gen = gen + 1)
+
+
+df_mean <- df_spec  %>%
+  group_by(gen, sd) %>%
   summarise(
     perf = mean(perf),
     model_knowledge = mean(model_knowledge),
@@ -27,8 +206,8 @@ df_mean <- df %>%
   mutate(type = "average") %>%
   mutate(sim = NA)
 
-df_sim <- df %>%
-  group_by(sim, gen) %>%
+df_sim <- df_spec %>%
+  group_by(sim, gen, sd) %>%
   summarise(
     perf = mean(perf),
     model_knowledge = mean(model_knowledge),
@@ -36,15 +215,11 @@ df_sim <- df %>%
   ) %>%
   mutate(type = "sim")
 
-```
 
-
-
-```{r}
 p_perf <- df_sim %>%
-  ggplot( aes(x = gen+1, y = perf, group = sim)) +
+  ggplot( aes(x = gen, y = perf, group = sim)) +
   geom_line(alpha=0.6, color = "grey", size = 0.8) +
-  geom_line(data = df_mean, aes(x = gen+1, y = perf), size = 2) +
+  geom_line(data = df_mean, aes(x = gen, y = perf), size = 2) +
   labs(
     x = "Generation",
     y = "Task Performance",
@@ -57,17 +232,18 @@ p_perf <- df_sim %>%
     expand = c(.001, .001)
   ) +
   scale_y_continuous(
-    limits = c(-0.5, 0.5),
-    breaks = seq(-0.5, 0.5, by = 0.50),
+    limits = c(-0.5, 1.5),
+    breaks = seq(-0.5, 1.5, by = 0.50),
     expand = c(.001, .001)
   ) +
-  theme_minimal()
+  theme_minimal() +
+  facet_wrap(~sd, ncol = 5)
 
 
 p_model_knowledge <- df_sim %>%
-  ggplot( aes(x = gen+1, y = model_knowledge, group = sim)) +
+  ggplot( aes(x = gen, y = model_knowledge, group = sim)) +
   geom_line(alpha=0.6, color = "grey", size = 0.8) +
-  geom_line(data = df_mean, aes(x = gen+1, y = model_knowledge), size = 2) +
+  geom_line(data = df_mean, aes(x = gen, y = model_knowledge), size = 2) +
   labs(
     x = "Generation",
     y = "Model Knowledge",
@@ -80,17 +256,18 @@ p_model_knowledge <- df_sim %>%
     expand = c(.001, .001)
   ) +
   scale_y_continuous(
-    limits = c(0.5, 1),
-    breaks = seq(0.5, 1, by = 0.10),
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.2),
     expand = c(.001, .001)
   ) +
-  theme_minimal()
+  theme_minimal() +
+  facet_wrap(~sd, ncol = 5)
 
 
 p_w <- df_sim %>%
-  ggplot( aes(x = gen+1, y = w, group = sim)) +
+  ggplot( aes(x = gen, y = w, group = sim)) +
   geom_line(alpha=0.6, color = "grey", size = 0.8) +
-  geom_line(data = df_mean, aes(x = gen+1, y = w), size = 2) +
+  geom_line(data = df_mean, aes(x = gen, y = w), size = 2) +
   labs(
     x = "Generation",
     y = "W",
@@ -104,7 +281,441 @@ p_w <- df_sim %>%
   ) +
   scale_y_continuous(
     limits = c(0, 1),
-    breaks = seq(0, 1, by = 0.50),
+    breaks = seq(0, 1, by = 0.2),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~sd, ncol = 5)
+
+
+#p_perf + p_model_knowledge / p_w
+p_perf
+p_model_knowledge
+p_w
+```
+
+
+
+
+
+# Lock sd, alpha, beta (p is moving)
+
+
+```{r}
+df_spec <- df %>%
+  filter(sd == 0.2, beta == 1, alpha == 5) %>%
+  mutate(gen = gen + 1)
+
+
+df_mean <- df_spec  %>%
+  group_by(gen, p) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "average") %>%
+  mutate(sim = NA)
+
+df_sim <- df_spec %>%
+  group_by(sim, gen, p) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "sim")
+
+
+p_perf <- df_sim %>%
+  ggplot( aes(x = gen, y = perf, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = perf), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Task Performance",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(-0.5, 1.5),
+    breaks = seq(-0.5, 1.5, by = 0.50),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~p, ncol = 5)
+
+
+p_model_knowledge <- df_sim %>%
+  ggplot( aes(x = gen, y = model_knowledge, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = model_knowledge), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Model Knowledge",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.2),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~p, ncol = 5)
+
+
+p_w <- df_sim %>%
+  ggplot( aes(x = gen, y = w, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = w), size = 2) +
+  labs(
+    x = "Generation",
+    y = "W",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.2),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~p, ncol = 5)
+
+
+#p_perf + p_model_knowledge / p_w
+p_perf
+p_model_knowledge
+p_w
+```
+
+
+
+# Lock p, sd, alpha(beta is moving)
+
+
+```{r}
+df_spec <- df %>%
+  filter(p == 1, sd == 0.2, alpha == 5) %>%
+  mutate(gen = gen + 1)
+
+
+df_mean <- df_spec  %>%
+  group_by(gen, beta) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "average") %>%
+  mutate(sim = NA)
+
+df_sim <- df_spec %>%
+  group_by(sim, gen, beta) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "sim")
+
+
+p_perf <- df_sim %>%
+  ggplot( aes(x = gen, y = perf, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = perf), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Task Performance",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(-0.5, 1.5),
+    breaks = seq(-0.5, 1.5, by = 0.50),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~beta, ncol = 5)
+
+
+p_model_knowledge <- df_sim %>%
+  ggplot( aes(x = gen, y = model_knowledge, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = model_knowledge), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Model Knowledge",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.2),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~beta, ncol = 5)
+
+
+p_w <- df_sim %>%
+  ggplot( aes(x = gen, y = w, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = w), size = 2) +
+  labs(
+    x = "Generation",
+    y = "W",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.2),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~beta, ncol = 5)
+
+
+#p_perf + p_model_knowledge / p_w
+p_perf
+p_model_knowledge
+p_w
+```
+
+
+# Lock p, sd, beta (alpha is moving)
+
+
+```{r}
+df_spec <- df %>%
+  filter(p == 1, sd == 0.2, beta == 1) %>%
+  mutate(gen = gen + 1)
+
+
+df_mean <- df_spec  %>%
+  group_by(gen, alpha) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "average") %>%
+  mutate(sim = NA)
+
+df_sim <- df_spec %>%
+  group_by(sim, gen, alpha) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "sim")
+
+
+p_perf <- df_sim %>%
+  ggplot( aes(x = gen, y = perf, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = perf), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Task Performance",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(-0.5, 1.5),
+    breaks = seq(-0.5, 1.5, by = 0.50),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~alpha, ncol = 5)
+
+
+p_model_knowledge <- df_sim %>%
+  ggplot( aes(x = gen, y = model_knowledge, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = model_knowledge), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Model Knowledge",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.2),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~alpha, ncol = 5)
+
+
+p_w <- df_sim %>%
+  ggplot( aes(x = gen, y = w, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = w), size = 2) +
+  labs(
+    x = "Generation",
+    y = "W",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.2),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal() +
+  facet_wrap(~alpha, ncol = 5)
+
+
+#p_perf + p_model_knowledge / p_w
+p_perf
+p_model_knowledge
+p_w
+```
+
+# Specific run
+
+
+```{r}
+# df_spec <- df %>%
+#   filter(p == 0.9, sd == 0.2, beta == 1, alpha == 4) %>%
+#   mutate(gen = gen + 1)
+
+df_spec <- df
+
+df_mean <- df_spec  %>%
+  group_by(gen) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "average") %>%
+  mutate(sim = NA)
+
+df_sim <- df_spec %>%
+  group_by(sim, gen) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "sim")
+
+
+p_perf <- df_sim %>%
+  ggplot( aes(x = gen, y = perf, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = perf), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Task Performance",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(-0.5, 1.5),
+    breaks = seq(-0.5, 1.5, by = 0.50),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal()
+
+
+p_model_knowledge <- df_sim %>%
+  ggplot( aes(x = gen, y = model_knowledge, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = model_knowledge), size = 2) +
+  labs(
+    x = "Generation",
+    y = "Model Knowledge",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0.4, 0.9),
+    breaks = seq(0, 1, by = 0.2),
+    expand = c(.001, .001)
+  ) +
+  theme_minimal()
+
+
+p_w <- df_sim %>%
+  ggplot( aes(x = gen, y = w, group = sim)) +
+  geom_line(alpha=0.6, color = "grey", size = 0.8) +
+  geom_line(data = df_mean, aes(x = gen, y = w), size = 2) +
+  labs(
+    x = "Generation",
+    y = "W",
+    shape = " ",
+    colour = " "
+  ) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0.2, 0.9),
+    breaks = seq(0, 1, by = 0.20),
     expand = c(.001, .001)
   ) +
   theme_minimal()
