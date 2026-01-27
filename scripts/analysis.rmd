@@ -8,183 +8,378 @@ output: html_document
 ```{r}
 library(tidyverse)
 library(patchwork)
+library(arrow)
+```
+
+
+# LOADING DATA
+
+
+```{r}
+df <- open_dataset("../data/ABM_results")
 ```
 
 
 ```{r}
-df <- read.csv("../data/ABM_results.csv")
-```
-
-```{r}
-df_sub <- df[1:1000, ]
+df |> head() |> collect()
 ```
 
 
-
-
-
-
-
-# distribution
+# FIG 2.D
 
 ```{r}
-df %>%
-  # filter(alpha == 3, beta == 1) %>%
-  ggplot( aes(x = as.factor(gen), y = perf)) +
-  geom_boxplot()
-  
-```
-
-
-# p (probability of learning)
-
-```{r}
-df_plot <- df %>%
-  group_by(gen, p) %>%
+df_beta_distrib <- df |>
+  group_by(gen, alpha, beta) |>
   summarise(
     perf = mean(perf),
     model_knowledge = mean(model_knowledge),
-    w = mean(w)
-  ) %>%
-  mutate(gen = gen + 1)
+    w = mean(w),
+    .groups = "drop"
+  ) |>
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1
+  ) |> 
+  collect()
 ```
 
 
 ```{r}
+df_plot <- df_beta_distrib %>%
+  filter(transmission_quality %in% c(0.2, 0.4, 0.6, 0.8)) %>%
+  filter((alpha %% 1) != 0.5) %>%
+  filter((beta %% 1) != 0.5) %>%
+  mutate(transmission_quality = as.factor(transmission_quality))
+
+
 df_plot %>%
-  ggplot( aes(x = gen, y = perf, colour = factor(p), group = p)) +
-  geom_line() +
-  geom_text( data = . %>% filter(gen == 10), aes(label = p), hjust = -0.1, show.legend = FALSE ) +
+  ggplot( aes(
+    x = gen,
+    y = perf,
+    group = transmission_quality,
+    color = transmission_quality
+    )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
   scale_x_continuous(
-    limits = c(0.5, 10.5),
+    limits = c(1, 10),
     breaks = seq(1, 10, by = 1),
-    expand = c(.001, .001)
+    expand = c(0.001, 0.001)
   ) +
-  labs(
-    title = "Impact of learning probability (p)",
-    y = "Task performance",
-    x = "Generation",
-    colour = "Probability of learning"
+  scale_color_manual(
+    values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
   ) +
+  labs(y = "Task Performance", x = "Generation") +
   theme_minimal() +
-  theme(legend.position = "none")
-```
-
-
-# sd (variation of learning)
-
-```{r}
-df_plot <- df %>%
-  group_by(gen, sd) %>%
-  summarise(
-    perf = mean(perf),
-    model_knowledge = mean(model_knowledge),
-    w = mean(w)
-  ) %>%
-  mutate(gen = gen + 1)
-```
-
-
-```{r}
-df_plot %>%
-  ggplot( aes(x = gen, y = perf, colour = factor(sd), group = sd)) +
-  geom_line() +
-  geom_text( data = . %>% filter(gen == 10), aes(label = sd), hjust = -0.1, show.legend = FALSE ) +
-  scale_x_continuous(
-    limits = c(0.5, 10.5),
-    breaks = seq(1, 10, by = 1),
-    expand = c(.001, .001)
-  ) +
-  labs(
-    title = "Impact of learning variance (sd)",
-    y = "Task performance",
-    x = "Generation",
-    colour = "Probability of learning"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
-
-# noise distribution
-
-```{r}
-df_plot <- df %>%
-  group_by(alpha, beta) %>%
-  summarise(
-    perf = mean(perf),
-    model_knowledge = mean(model_knowledge),
-    w = mean(w)
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    axis.ticks = element_line(colour = "black", size = .8),
+    axis.ticks.length.x = unit(8, "pt"),
+    axis.ticks.length.y = unit(10, "pt"),
+    axis.text = element_text(size = 18, colour = "black"),
+    axis.title.x = element_text(
+      margin = margin(t = 10),
+      size = 24
+    ),
+    axis.title.y = element_text(
+      margin = margin(r = 10),
+      size = 24
+    ),
+    plot.margin = margin(15, 15, 20, 15),
+    legend.position = "none"
   )
-df_plot <- df_plot %>% 
-  mutate(transmission_quality = alpha / (alpha + beta))
 ```
+
+
+# SUPMAT
+
+## Impact of p on Transmission quality
+```{r}
+df_beta_distrib <- df |>
+  group_by(gen, alpha, beta, p) |>
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w),
+    .groups = "drop"
+  ) |>
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1
+  ) |> 
+  collect()
+```
+
 
 ```{r}
-df_plot %>%
-  ggplot(aes(x = transmission_quality, y = perf)) +
-  geom_point() +
-  geom_smooth()
+df_plot <- df_beta_distrib %>%
+  filter(transmission_quality %in% c(0.2, 0.4, 0.6, 0.8)) %>%
+  filter((alpha %% 1) != 0.5) %>%
+  filter((beta %% 1) != 0.5) %>%
+  mutate(transmission_quality = as.factor(transmission_quality))
 
+
+df_plot %>%
+  ggplot( aes(
+    x = gen,
+    y = perf,
+    group = transmission_quality,
+    color = transmission_quality
+    )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
+  scale_x_continuous(
+    limits = c(1, 10),
+    breaks = seq(1, 10, by = 1),
+    expand = c(0.001, 0.001)
+  ) +
+  scale_color_manual(
+    values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
+  ) +
+  labs(y = "Task Performance", x = "Generation") +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    axis.ticks = element_line(colour = "black", size = .8),
+    axis.ticks.length.x = unit(6, "pt"),
+    axis.ticks.length.y = unit(8, "pt"),
+    plot.margin = margin(15, 15, 20, 15),
+    legend.position = "bottom"
+  ) +
+  facet_wrap(~p)
+```
+
+
+## Impact of sd on Transmission quality
+```{r}
+df_beta_distrib <- df |>
+  group_by(gen, alpha, beta, sd) |>
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w),
+    .groups = "drop"
+  ) |>
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1
+  ) |> 
+  collect()
 ```
 
 
 ```{r}
+df_plot <- df_beta_distrib %>%
+  filter(transmission_quality %in% c(0.2, 0.4, 0.6, 0.8)) %>%
+  filter((alpha %% 1) != 0.5) %>%
+  filter((beta %% 1) != 0.5) %>%
+  mutate(transmission_quality = as.factor(transmission_quality))
+
+
 df_plot %>%
-  ggplot( aes(x = beta, y = alpha, fill = perf)) +
-  geom_tile()
+  ggplot( aes(
+    x = gen,
+    y = perf,
+    group = transmission_quality,
+    color = transmission_quality
+    )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
+  scale_x_continuous(
+    limits = c(1, 10),
+    breaks = seq(1, 10, by = 1),
+    expand = c(0.001, 0.001)
+  ) +
+  scale_color_manual(
+    values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
+  ) +
+  labs(y = "Task Performance", x = "Generation") +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    axis.ticks = element_line(colour = "black", size = .8),
+    axis.ticks.length.x = unit(6, "pt"),
+    axis.ticks.length.y = unit(8, "pt"),
+    plot.margin = margin(15, 15, 20, 15),
+    legend.position = "bottom"
+  ) +
+  facet_wrap(~sd)
 ```
 
+
+## Impact of sd&p on Transmission quality
+```{r}
+df_beta_distrib <- df |>
+  group_by(gen, alpha, beta, sd, p) |>
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w),
+    .groups = "drop"
+  ) |>
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1
+  ) |> 
+  collect()
+```
 
 
 ```{r}
-df_plot %>%
-  ggplot( aes(x = gen, y = perf)) +
-  geom_line() +
-  scale_x_continuous(
-    limits = c(0.5, 10.5),
-    breaks = seq(1, 10, by = 1),
-    expand = c(.001, .001)
-  ) +
-  labs(
-    y = "Task performance",
-    x = "Generation"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none") +
-  facet_grid(alpha ~ beta, labeller = label_both)
+df_plot <- df_beta_distrib %>%
+  filter(transmission_quality %in% c(0.2, 0.4, 0.6, 0.8)) %>%
+  filter((alpha %% 1) != 0.5) %>%
+  filter((beta %% 1) != 0.5) %>%
+  mutate(transmission_quality = as.factor(transmission_quality))
+
 
 df_plot %>%
-  ggplot( aes(x = gen, y = w)) +
-  geom_line() +
+  ggplot( aes(
+    x = gen,
+    y = perf,
+    group = transmission_quality,
+    color = transmission_quality
+    )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
   scale_x_continuous(
-    limits = c(0.5, 10.5),
+    limits = c(1, 10),
     breaks = seq(1, 10, by = 1),
-    expand = c(.001, .001)
+    expand = c(0.001, 0.001)
   ) +
-  labs(
-    y = "w",
-    x = "Generation"
+  scale_color_manual(
+    values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
   ) +
+  labs(y = "Task Performance", x = "Generation") +
   theme_minimal() +
-  theme(legend.position = "none") +
-  facet_grid(alpha ~ beta, labeller = label_both)
-
-df_plot %>%
-  ggplot( aes(x = gen, y = model_knowledge)) +
-  geom_line() +
-  scale_x_continuous(
-    limits = c(0.5, 10.5),
-    breaks = seq(1, 10, by = 1),
-    expand = c(.001, .001)
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    axis.ticks = element_line(colour = "black", size = .8),
+    axis.ticks.length.x = unit(6, "pt"),
+    axis.ticks.length.y = unit(8, "pt"),
+    plot.margin = margin(15, 15, 20, 15),
+    legend.position = "bottom"
   ) +
-  labs(
-    y = "Model Knowledge",
-    x = "Generation"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none") +
-  facet_grid(alpha ~ beta, labeller = label_both)
+  facet_grid(p~sd)
 ```
+
+
+## test
+
+```{r}
+df <- read_csv("../data/test_run.csv")
+```
+
+
+```{r}
+df_beta_distrib <- df %>%
+  group_by(gen, alpha, beta, p, sd) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1
+  ) %>%
+  mutate(transmission_quality = as.factor(transmission_quality)) %>%
+  filter(transmission_quality %in% c(0.2, 0.4, 0.6, 0.8))
+  
+df_beta_distrib %>%
+  ggplot( aes(
+    x = gen,
+    y = perf,
+    group = transmission_quality,
+    color = transmission_quality
+    )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
+  scale_x_continuous(
+    limits = c(1, 10),
+    breaks = seq(1, 10, by = 1),
+    expand = c(0.001, 0.001)
+  ) +
+  scale_color_manual(
+    values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
+  ) +
+  labs(y = "Task Performance", x = "Generation") +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    axis.ticks = element_line(colour = "black", size = .8),
+    axis.ticks.length.x = unit(6, "pt"),
+    axis.ticks.length.y = unit(8, "pt"),
+    plot.margin = margin(15, 15, 20, 15),
+    legend.position = "bottom"
+  ) +
+  facet_grid(p~sd)
+```
+
+
+```{r}
+df_beta_distrib <- df %>%
+  group_by(gen, alpha, beta, p, sd) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1
+  ) %>%
+  mutate(transmission_quality = as.factor(transmission_quality)) %>%
+  filter(transmission_quality %in% c(0.2, 0.4, 0.6, 0.8))
+  
+df_beta_distrib %>%
+  ggplot( aes(
+    x = gen,
+    y = w,
+    group = transmission_quality,
+    color = transmission_quality
+    )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
+  scale_x_continuous(
+    limits = c(1, 10),
+    breaks = seq(1, 10, by = 1),
+    expand = c(0.001, 0.001)
+  ) +
+  scale_color_manual(
+    values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
+  ) +
+  labs(y = "Task Performance", x = "Generation") +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    axis.ticks = element_line(colour = "black", size = .8),
+    axis.ticks.length.x = unit(6, "pt"),
+    axis.ticks.length.y = unit(8, "pt"),
+    plot.margin = margin(15, 15, 20, 15),
+    legend.position = "bottom"
+  ) +
+  facet_grid(p~sd)
+```
+
+
+## old
+
+
 
 
 # Lock p, alpha, beta (sd is moving)

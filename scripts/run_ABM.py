@@ -16,19 +16,25 @@ from ABM.learning import learning
 
 perf_matrix = pd.read_csv("data/perf_matrix.csv")
 
-N_SIM = 100
+N_SIM = 5
 N_GEN = 10
 N = 100
 K = 4
 # model_knowledge_param = {"mean": 0.52, "sd": 0.07}
 # w_param = {"mean": 0.5, "sd": 0.14}
-model_knowledge_param = {"mean": 0.52, "sd": 0.2}
-w_param = {"mean": 0.5, "sd": 0.2}
+# model_knowledge_param = {"mean": 0.52, "sd": 0.2}
+# w_param = {"mean": 0.5, "sd": 0.2}
+
+df_starting_population = pd.read_csv("data/starting_population.csv")
 
 l_beta = np.arange(1, 5.5, 0.5)
 l_alpha = np.arange(1, 5.5, 0.5)
 l_p = np.arange(0, 1.1, 0.2)
 l_sd = np.arange(0, 1.1, 0.2)
+
+
+l_beta = np.arange(1, 6, 1)
+l_alpha = np.arange(1, 6, 1)
 
 
 param_grid = [
@@ -41,7 +47,8 @@ def run_simulation(beta, alpha, p, sd, sim):
     beta_params = {"alpha": alpha, "beta": beta}
     param_learning = {"p": p, "sd": sd}
 
-    pop = init_population(N, model_knowledge_param, w_param)
+    # pop = init_population(N, model_knowledge_param, w_param)
+    pop = init_population(N, df_starting_population)
     data_sim = pd.DataFrame()
 
     for gen in range(N_GEN):
@@ -87,4 +94,4 @@ if __name__ == "__main__":
         )
 
     final_df = pd.concat(results, ignore_index=True)
-    final_df.to_csv("data/ABM_results.csv", index=False)
+    final_df.to_csv("data/test_run.csv", index=False)

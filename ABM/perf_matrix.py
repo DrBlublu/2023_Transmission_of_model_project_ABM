@@ -8,6 +8,7 @@ import pandas as pd
 def transform_simulation_results(source_filename, output_filename):
     """
     Transform a simulation_result file to a perf_matrix file.
+    Change the model knowledge scale from [0, 1] to [-1, 1] to match behavioural data.
     Average over simulation for value of model knowledge & w.
 
     Args:
@@ -18,12 +19,15 @@ def transform_simulation_results(source_filename, output_filename):
     df = pd.read_csv(f"data/{source_filename}.csv")
 
     df_matrix = (
-    df.groupby(["model_knowledge", "w"], as_index=False)["perf_stake"]
-      .mean()
-      .assign(
-          model_knowledge=lambda d: d["model_knowledge"].round(2),
-          w=lambda d: d["w"].round(2)
-      )
+        df.assign(
+            model_knowledge=lambda d: ((d["model_knowledge"] * 100 - 50) / 50)
+        )
+        .groupby(["model_knowledge", "w"], as_index=False)["perf_stake"]
+        .mean()
+        .assign(
+            model_knowledge=lambda d: d["model_knowledge"].round(2),
+            w=lambda d: d["w"].round(2)
+        )
     )
 
     df_matrix.to_csv(f"data/{output_filename}.csv", index=False)

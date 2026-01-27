@@ -28,7 +28,7 @@ def learning(agents: pd.DataFrame, param_learning: dict) -> tuple:
     mask = np.random.rand(len(agents)) <= param_learning["p"]
     learning_values = np.random.normal(0, param_learning["sd"], size=len(agents))
     agents_copy.loc[mask, "model_knowledge"] = (
-        np.clip(agents.loc[mask, "model_knowledge"] + learning_values[mask], 0, 1).round(2)
+        round(np.round(np.clip(agents.loc[mask, "model_knowledge"] + learning_values[mask], 0, 1) / 0.02) * 0.02, 2)
     )
     agents_copy.loc[mask, "w"] = (
         np.clip(agents.loc[mask, "w"] + learning_values[mask], 0, 1).round(2)

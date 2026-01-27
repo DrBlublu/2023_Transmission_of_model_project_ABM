@@ -23,7 +23,7 @@ def parent_transmission(agents: pd.DataFrame, beta_params: dict) -> tuple:
     """
     noise = np.random.beta(beta_params["alpha"], beta_params["beta"], size=agents.shape[0])
 
-    children_model_knowledge = (agents["model_knowledge"] * noise).round(2)
+    children_model_knowledge = round(np.round((agents["model_knowledge"] * noise) / 0.02) * 0.02, 2)
     children_w = (agents["w"] * noise).round(2)
 
     return children_model_knowledge, children_w

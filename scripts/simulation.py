@@ -93,4 +93,4 @@ if __name__ == "__main__":
     results = [item for sublist in all_results for item in sublist]
 
     df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf", "perf_stake", "baseline_reward", "avg_reward"])
-    df.to_csv("data/simulation_language_results.csv", index=False)
+    df.to_csv("data/simulation_results.csv", index=False)
