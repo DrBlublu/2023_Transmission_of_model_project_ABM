@@ -92,4 +92,4 @@ if __name__ == "__main__":
         )
 
     final_df = pd.concat(results, ignore_index=True)
-    final_df.to_csv("data/test_run_normal.csv", index=False)
+    final_df.to_csv("data/test_noise.csv", index=False)
