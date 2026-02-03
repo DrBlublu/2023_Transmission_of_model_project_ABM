@@ -15,17 +15,13 @@ from ABM.parent_transmission import parent_transmission
 from ABM.learning import learning
 
 perf_matrix = pd.read_csv("data/perf_matrix.csv")
+df_starting_population = pd.read_csv("data/starting_population.csv")
 
-N_SIM = 5
+
+N_SIM = 20
 N_GEN = 10
 N = 100
 K = 4
-# model_knowledge_param = {"mean": 0.52, "sd": 0.07}
-# w_param = {"mean": 0.5, "sd": 0.14}
-# model_knowledge_param = {"mean": 0.52, "sd": 0.2}
-# w_param = {"mean": 0.5, "sd": 0.2}
-
-df_starting_population = pd.read_csv("data/starting_population.csv")
 
 l_beta = np.arange(1, 5.5, 0.5)
 l_alpha = np.arange(1, 5.5, 0.5)
@@ -43,12 +39,14 @@ param_grid = [
     for sim in range(N_SIM)
 ]
 
+
 def run_simulation(beta, alpha, p, sd, sim):
+    
     beta_params = {"alpha": alpha, "beta": beta}
     param_learning = {"p": p, "sd": sd}
 
-    # pop = init_population(N, model_knowledge_param, w_param)
     pop = init_population(N, df_starting_population)
+    perfs = pop["perf"]
     data_sim = pd.DataFrame()
 
     for gen in range(N_GEN):
@@ -58,8 +56,8 @@ def run_simulation(beta, alpha, p, sd, sim):
             children = learning(children, param_learning)
             pop = children.copy()
 
-        perfs = [get_perf(perf_matrix, agent["model_knowledge"], agent["w"])
-                 for _, agent in pop.iterrows()]
+            perfs = [get_perf(perf_matrix, agent["model_knowledge"], agent["w"])
+                    for _, agent in pop.iterrows()]
         pop["perf"] = perfs
         data_sim = pd.concat([data_sim, pop.copy()], ignore_index=True)
 
@@ -94,4 +92,4 @@ if __name__ == "__main__":
         )
 
     final_df = pd.concat(results, ignore_index=True)
-    final_df.to_csv("data/test_run.csv", index=False)
+    final_df.to_csv("data/test_run_normal.csv", index=False)

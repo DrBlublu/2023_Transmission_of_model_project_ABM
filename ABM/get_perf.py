@@ -16,9 +16,12 @@ def get_perf(perf_matrix, agent_model_knowledge, agent_w):
         perf (float): performance of the agent.
     """
 
-    perf = perf_matrix.loc[
-        (perf_matrix["model_knowledge"] == agent_model_knowledge) & (perf_matrix["w"] == agent_w),
-        ["perf_stake"]
-        ].values[0][0]
+    dist = (
+        (perf_matrix["model_knowledge"] - agent_model_knowledge)**2 +
+        (perf_matrix["w"] - agent_w)**2
+    )
 
-    return perf
+    # Index of closest row
+    idx = dist.idxmin()
+
+    return perf_matrix.loc[idx, "perf_stake"]

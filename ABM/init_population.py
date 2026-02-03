@@ -26,6 +26,7 @@ def init_population(N, df_starting_population):
         "gen": np.zeros(N),
         "model_knowledge": round(np.round(starting_population_sample["model_knowledge"] / 0.02) * 0.02, 2), # keep step 0.02 for the perf matrix
         "w": starting_population_sample["w"],
+        "perf": starting_population_sample["perf"],
         "parent_id": [f"fake_parent_{i}" for i in range(N)],
         "parent_model_knowledge": np.random.normal(0, 1, N),
         "parent_w": np.random.normal(0, 1, N),

@@ -3,3 +3,5 @@ docs/center-for-humans-and-machines-reward
 scripts/test.ipynb
 *.egg-info
 data/ABM_results.csv
+data/test_run.csv
+data/test_run_bis.csv
