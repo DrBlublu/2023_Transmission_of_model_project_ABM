@@ -30,30 +30,79 @@ df |> head() |> collect()
 
 
 ```{r}
-df <- read_csv("../data/test_run_normal.csv")
+df <- read_csv("../data/test_noise.csv")
+df_parent <- df %>%
+  filter(gen > 0) %>%
+  select(gen, parent_id, parent_model_knowledge, parent_w, parent_perf, p, sd, alpha, beta) %>%
+  group_by(gen, alpha, beta) %>%
+  summarise(
+    parent_perf = mean(parent_perf),
+    parent_model_knowledge = mean(parent_model_knowledge),
+    parent_w = mean(parent_w)
+  ) %>%
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1,
+    parent_w = (50*parent_w + 50) / 100
+  )
+```
+
+
+```{r}
+
+```
+
+
+
+
+
+# FIG 2.D
+
+```{r}
+df <- read_csv("../data/test_noise.csv")
 
 df_beta_distrib <- df |>
-  group_by(gen, transmission_noise) |>
+  group_by(gen, alpha, beta) |>
   summarise(
     perf = mean(perf),
     model_knowledge = mean(model_knowledge),
     w = mean(w),
     .groups = "drop"
   ) |>
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1,
+    w = (50*w + 50) / 100
+  ) |>
   collect()
 ```
 
 
-
 ```{r}
-df_beta_distrib %>%
+df_plot <- df_beta_distrib %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
+  filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
+  group_by(gen, transmission_quality) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(transmission_quality = as.factor(transmission_quality))
+
+
+
+
+df_plot %>%
   ggplot( aes(
     x = gen,
-    y = w,
-    group = transmission_noise,
-    color = transmission_noise
+    y = perf,
+    group = transmission_quality,
+    color = transmission_quality
     )) +
-  geom_line(aes(color = transmission_noise), linewidth = 1) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
   scale_x_continuous(
     limits = c(1, 10),
     breaks = seq(1, 10, by = 1),
@@ -80,77 +129,8 @@ df_beta_distrib %>%
       margin = margin(r = 10),
       size = 24
     ),
-    plot.margin = margin(15, 15, 20, 15)
-    # legend.position = "none"
-  )
-```
-
-
-
-# FIG 2.D
-
-```{r}
-df <- read_csv("../data/test_run_normal.csv")
-
-df_beta_distrib <- df |>
-  group_by(gen, alpha, beta) |>
-  summarise(
-    perf = mean(perf),
-    model_knowledge = mean(model_knowledge),
-    w = mean(w),
-    .groups = "drop"
-  ) |>
-  mutate(
-    transmission_quality = alpha / (alpha + beta),
-    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
-    gen = gen + 1
-  ) |> 
-  collect()
-```
-
-
-```{r}
-df_plot <- df_beta_distrib %>%
-  filter(transmission_quality %in% c(0.2, 0.4, 0.6, 0.8)) %>%
-  mutate(transmission_quality = as.factor(transmission_quality))
-
-
-df_plot %>%
-  ggplot( aes(
-    x = gen,
-    y = perf,
-    group = transmission_quality,
-    color = transmission_quality
-    )) +
-  geom_line(aes(color = transmission_quality), linewidth = 1) +
-  scale_x_continuous(
-    limits = c(1, 10),
-    breaks = seq(1, 10, by = 1),
-    expand = c(0.001, 0.001)
-  ) +
-  scale_color_manual(
-    values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
-  ) +
-  labs(y = "Task Performance", x = "Generation") +
-  theme_minimal() +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    axis.line = element_line(colour = "black", size = .8),
-    axis.ticks = element_line(colour = "black", size = .8),
-    axis.ticks.length.x = unit(8, "pt"),
-    axis.ticks.length.y = unit(10, "pt"),
-    axis.text = element_text(size = 18, colour = "black"),
-    axis.title.x = element_text(
-      margin = margin(t = 10),
-      size = 24
-    ),
-    axis.title.y = element_text(
-      margin = margin(r = 10),
-      size = 24
-    ),
     plot.margin = margin(15, 15, 20, 15),
-    legend.position = "none"
+    legend.position = "bottom"
   )
 ```
 
@@ -178,7 +158,13 @@ df_beta_distrib <- df |>
 
 ```{r}
 df_plot <- df_beta_distrib %>%
-  filter(transmission_quality %in% c(0.2, 0.4, 0.6, 0.8)) %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
+  group_by(gen, transmission_quality) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
   mutate(transmission_quality = as.factor(transmission_quality))
 
 
@@ -195,9 +181,9 @@ df_plot %>%
     breaks = seq(1, 10, by = 1),
     expand = c(0.001, 0.001)
   ) +
-  scale_color_manual(
-    values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
-  ) +
+  # scale_color_manual(
+  #   values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
+  # ) +
   labs(y = "Model Knowledge", x = "Generation") +
   theme_minimal() +
   theme(
@@ -217,7 +203,7 @@ df_plot %>%
       size = 24
     ),
     plot.margin = margin(15, 15, 20, 15),
-    legend.position = "none"
+    legend.position = "bottom"
   )
 ```
 
@@ -234,7 +220,8 @@ df_beta_distrib <- df |>
   mutate(
     transmission_quality = alpha / (alpha + beta),
     variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
-    gen = gen + 1
+    gen = gen + 1,
+    w = (50*w + 50) / 100
   ) |>
   collect()
 ```
@@ -242,9 +229,14 @@ df_beta_distrib <- df |>
 
 ```{r}
 df_plot <- df_beta_distrib %>%
-  filter(transmission_quality %in% c(0.2, 0.4, 0.6, 0.8)) %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
+  group_by(gen, transmission_quality) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
   mutate(transmission_quality = as.factor(transmission_quality))
-
 
 df_plot %>%
   ggplot( aes(
@@ -259,9 +251,9 @@ df_plot %>%
     breaks = seq(1, 10, by = 1),
     expand = c(0.001, 0.001)
   ) +
-  scale_color_manual(
-    values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
-  ) +
+  # scale_color_manual(
+  #   values = c("0.8" = "#0E3439", "0.6" = "#1F5F66", "0.4" = "#4E9A9A", "0.2" = "#9AD9D2")
+  # ) +
   labs(y = "w", x = "Generation") +
   theme_minimal() +
   theme(
@@ -281,7 +273,7 @@ df_plot %>%
       size = 24
     ),
     plot.margin = margin(15, 15, 20, 15),
-    legend.position = "none"
+    legend.position = "bottom"
   )
 ```
 

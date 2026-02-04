@@ -20,7 +20,8 @@ def transform_simulation_results(source_filename, output_filename):
 
     df_matrix = (
         df.assign(
-            model_knowledge=lambda d: ((d["model_knowledge"] * 100 - 50) / 50)
+            model_knowledge=lambda d: ((d["model_knowledge"] * 100 - 50) / 50),
+            w = lambda d: ((d["w"] * 100 - 50) / 50)
         )
         .groupby(["model_knowledge", "w"], as_index=False)["perf_stake"]
         .mean()

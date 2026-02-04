@@ -5,3 +5,4 @@ scripts/test.ipynb
 data/ABM_results.csv
 data/test_run.csv
 data/test_run_bis.csv
+data/test_noise.csv

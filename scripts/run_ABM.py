@@ -18,7 +18,7 @@ perf_matrix = pd.read_csv("data/perf_matrix.csv")
 df_starting_population = pd.read_csv("data/starting_population.csv")
 
 
-N_SIM = 20
+N_SIM = 10
 N_GEN = 10
 N = 100
 K = 4
@@ -29,8 +29,12 @@ l_p = np.arange(0, 1.1, 0.2)
 l_sd = np.arange(0, 1.1, 0.2)
 
 
-l_beta = np.arange(1, 6, 1)
-l_alpha = np.arange(1, 6, 1)
+eps = 1e-6
+l_beta  = np.array([eps, 1, 2, 3, 4, 5])
+l_alpha = np.array([eps, 1, 2, 3, 4, 5])
+
+l_p = np.arange(0, 1.1, 0.5)
+l_sd = np.arange(0, 1.1, 0.5)
 
 
 param_grid = [
@@ -38,7 +42,7 @@ param_grid = [
     for beta, alpha, p, sd in itertools.product(l_beta, l_alpha, l_p, l_sd)
     for sim in range(N_SIM)
 ]
-
+    
 
 def run_simulation(beta, alpha, p, sd, sim):
     
