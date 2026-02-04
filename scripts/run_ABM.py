@@ -18,7 +18,7 @@ perf_matrix = pd.read_csv("data/perf_matrix.csv")
 df_starting_population = pd.read_csv("data/starting_population.csv")
 
 
-N_SIM = 10
+N_SIM = 20
 N_GEN = 10
 N = 100
 K = 4
@@ -33,8 +33,6 @@ eps = 1e-6
 l_beta  = np.array([eps, 1, 2, 3, 4, 5])
 l_alpha = np.array([eps, 1, 2, 3, 4, 5])
 
-l_p = np.arange(0, 1.1, 0.5)
-l_sd = np.arange(0, 1.1, 0.5)
 
 
 param_grid = [
@@ -50,7 +48,6 @@ def run_simulation(beta, alpha, p, sd, sim):
     param_learning = {"p": p, "sd": sd}
 
     pop = init_population(N, df_starting_population)
-    perfs = pop["perf"]
     data_sim = pd.DataFrame()
 
     for gen in range(N_GEN):
@@ -60,8 +57,8 @@ def run_simulation(beta, alpha, p, sd, sim):
             children = learning(children, param_learning)
             pop = children.copy()
 
-            perfs = [get_perf(perf_matrix, agent["model_knowledge"], agent["w"])
-                    for _, agent in pop.iterrows()]
+        perfs = [get_perf(perf_matrix, agent["model_knowledge"], agent["w"])
+                for _, agent in pop.iterrows()]
         pop["perf"] = perfs
         data_sim = pd.concat([data_sim, pop.copy()], ignore_index=True)
 
@@ -87,7 +84,7 @@ def run_simulation_wrapper(args):
 
 
 if __name__ == "__main__":
-    with Pool(processes=12) as pool:
+    with Pool(processes=8) as pool:
         results = list(
             tqdm(
                 pool.imap(run_simulation_wrapper, param_grid),
@@ -96,4 +93,4 @@ if __name__ == "__main__":
         )
 
     final_df = pd.concat(results, ignore_index=True)
-    final_df.to_csv("data/test_noise.csv", index=False)
+    final_df.to_csv("data/test_noise_2.csv", index=False)

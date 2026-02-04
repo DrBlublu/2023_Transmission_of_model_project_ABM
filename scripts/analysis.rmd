@@ -50,17 +50,63 @@ df_parent <- df %>%
 
 
 ```{r}
+df <- read_csv("../data/test_noise_2.csv")
+
+
+df_plot <- df %>%
+  group_by(gen, alpha, beta, p, sd) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w),
+    parent_perf = mean(parent_perf),
+    parent_model_knowledge = mean(parent_model_knowledge),
+    parent_w = mean(parent_w)
+  )
 
 ```
 
 
+```{r}
+df_plot %>%
+  filter(gen > 0) %>%
+  ggplot( aes(x = as.factor(gen+1), y = parent_perf)) +
+  geom_boxplot()
+
+df_plot %>%
+  filter(gen > 0) %>%
+  ggplot( aes(x = as.factor(gen+1), y = parent_model_knowledge)) +
+  geom_boxplot()
+
+df_plot %>%
+  filter(gen > 0) %>%
+  ggplot( aes(x = as.factor(gen+1), y = parent_w)) +
+  geom_boxplot()
+```
+
+
+
+
+```{r}
+df_plot %>%
+  ggplot( aes(x = as.factor(gen+1), y = perf)) +
+  geom_boxplot()
+
+df_plot %>%
+  ggplot( aes(x = as.factor(gen+1), y = model_knowledge)) +
+  geom_boxplot()
+
+df_plot %>%
+  ggplot( aes(x = as.factor(gen+1), y = w)) +
+  geom_boxplot()
+```
 
 
 
 # FIG 2.D
 
 ```{r}
-df <- read_csv("../data/test_noise.csv")
+df <- read_csv("../data/test_noise_2.csv")
 
 df_beta_distrib <- df |>
   group_by(gen, alpha, beta) |>
