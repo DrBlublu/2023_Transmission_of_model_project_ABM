@@ -16,19 +16,19 @@ library(arrow)
 
 
 ```{r}
-df <- open_dataset("../data/ABM_results")
+# df <- open_dataset("../data/ABM_results")
 ```
 
 
 ```{r}
-df |> head() |> collect()
+# df |> head() |> collect()
 ```
 
 
 # Fig 2.D
 
 ```{r}
-df <- read_csv("../data/test_noise_2.csv")
+df <- read_csv("../data/data_ABM.csv")
 
 df_beta_distrib <- df |>
   group_by(gen, p, sd, alpha, beta) |>
@@ -47,74 +47,7 @@ df_beta_distrib <- df |>
   collect()
 ```
 
-## all value
-```{r}
-df_plot <- df_beta_distrib %>%
-  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
-  filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
-  group_by(gen, transmission_quality) %>%
-  summarise(
-    perf = mean(perf),
-    model_knowledge = mean(model_knowledge),
-    w = mean(w)
-  ) %>%
-  mutate(transmission_quality = as.factor(transmission_quality))
-
-
-
-
-p <- df_plot %>%
-  ggplot( aes(
-    x = gen,
-    y = perf,
-    group = transmission_quality,
-    color = transmission_quality
-  )) +
-  geom_line(aes(color = transmission_quality), linewidth = 1) +
-  geom_point(size = 5) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  scale_x_continuous(
-    limits = c(0.5, 10.5),
-    breaks = seq(1, 10, by = 1),
-    expand = c(.001, .001)
-  ) +
-  scale_y_continuous(
-    limits = c(-0.1, 1.5),
-    breaks = seq(0, 2, by = 0.50),
-    expand = c(.001, .001)
-  ) +
-  labs(y = "Task Performance", x = "Generation") +
-  theme_minimal() +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    axis.line = element_line(colour = "black", size = .8),
-    axis.ticks = element_line(colour = "black", size = .8),
-    axis.ticks.length.x = unit(8, "pt"),
-    axis.ticks.length.y = unit(10, "pt"),
-    axis.text = element_text(size = 18, colour = "black"),
-    axis.title.x = element_text(
-      margin = margin(t = 10),
-      size = 24
-    ),
-    axis.title.y = element_text(
-      margin = margin(r = 10),
-      size = 24
-    ),
-    plot.margin = margin(15, 15, 20, 15),
-    legend.position = "none"
-  )
-
-ggsave(
-  p,
-  filename = "../../2023_transmission_of_model/analysis/output/figures/manuscript/illustrator/fig2/fig2_D_all_value.pdf",
-  width = 6,
-  height = 4
-)
-```
-
-
-## specific p & sd
+## Fig 2.D.1 (task performance)
 ```{r}
 df_plot <- df_beta_distrib %>%
   filter(p == 0.2 & sd == 0.2) %>%
@@ -129,6 +62,15 @@ df_plot <- df_beta_distrib %>%
   mutate(transmission_quality = as.factor(transmission_quality))
 
 
+col_palette <- c(
+  "#020F02",  # darkest
+  "#083D07",
+  "#0E6B0C",
+  "#149911",  # base color
+  "#6FAF6A",  # pale green
+  "#B7D9B4"   # very light pastel green
+)
+
 
 
 p <- df_plot %>%
@@ -139,7 +81,7 @@ p <- df_plot %>%
     color = transmission_quality
   )) +
   geom_line(aes(color = transmission_quality), linewidth = 1) +
-  geom_point(size = 5) +
+  geom_point(size = 3, shape = 15) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   scale_x_continuous(
     limits = c(0.5, 10.5),
@@ -151,6 +93,7 @@ p <- df_plot %>%
   #   breaks = seq(0, 2, by = 0.50),
   #   expand = c(.001, .001)
   # ) +
+  scale_color_manual(values = col_palette) +
   labs(y = "Task Performance", x = "Generation") +
   theme_minimal() +
   theme(
@@ -173,14 +116,175 @@ p <- df_plot %>%
     legend.position = "none"
   )
 
-ggsave(
-  p,
-  filename = "../../2023_transmission_of_model/analysis/output/figures/manuscript/illustrator/fig2/fig2_D.pdf",
-  width = 6,
-  height = 4
-)
+p
+
+# ggsave(
+#   p,
+#   filename = "../../2023_transmission_of_model/analysis/output/figures/manuscript/illustrator/fig2/fig2_D_1.pdf",
+#   width = 6,
+#   height = 4
+# )
 ```
 
+
+
+## Fig 2.D.2 (model knowledge)
+```{r}
+df_plot <- df_beta_distrib %>%
+  filter(p == 0.2 & sd == 0.2) %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
+  filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
+  group_by(gen, transmission_quality) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(transmission_quality = as.factor(transmission_quality))
+
+
+col_palette <- c(
+  "#020F02",  # darkest
+  "#083D07",
+  "#0E6B0C",
+  "#149911",  # base color
+  "#6FAF6A",  # pale green
+  "#B7D9B4"   # very light pastel green
+)
+
+
+
+p <- df_plot %>%
+  ggplot( aes(
+    x = gen,
+    y = model_knowledge,
+    group = transmission_quality,
+    color = transmission_quality
+  )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
+  geom_point(size = 3, shape = 15) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  # scale_y_continuous(
+  #   limits = c(-0.1, 1.5),
+  #   breaks = seq(0, 2, by = 0.50),
+  #   expand = c(.001, .001)
+  # ) +
+  scale_color_manual(values = col_palette) +
+  labs(y = "Model Knowledge", x = "Generation") +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    axis.ticks = element_line(colour = "black", size = .8),
+    axis.ticks.length.x = unit(8, "pt"),
+    axis.ticks.length.y = unit(10, "pt"),
+    axis.text = element_text(size = 18, colour = "black"),
+    axis.title.x = element_text(
+      margin = margin(t = 10),
+      size = 24
+    ),
+    axis.title.y = element_text(
+      margin = margin(r = 10),
+      size = 24
+    ),
+    plot.margin = margin(15, 15, 20, 15),
+    legend.position = "none"
+  )
+
+p
+
+# ggsave(
+#   p,
+#   filename = "../../2023_transmission_of_model/analysis/output/figures/manuscript/illustrator/fig2/fig2_D_2.pdf",
+#   width = 6,
+#   height = 4
+# )
+```
+
+
+## Fig 2.D.3 (W)
+```{r}
+df_plot <- df_beta_distrib %>%
+  filter(p == 0.2 & sd == 0.2) %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
+  filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
+  group_by(gen, transmission_quality) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(transmission_quality = as.factor(transmission_quality))
+
+
+col_palette <- c(
+  "#020F02",  # darkest
+  "#083D07",
+  "#0E6B0C",
+  "#149911",  # base color
+  "#6FAF6A",  # pale green
+  "#B7D9B4"   # very light pastel green
+)
+
+
+
+p <- df_plot %>%
+  ggplot( aes(
+    x = gen,
+    y = w,
+    group = transmission_quality,
+    color = transmission_quality
+  )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
+  geom_point(size = 3, shape = 15) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_y_continuous(
+    limits = c(0.45, 1),
+    breaks = seq(0.5, 1, by = 0.1),
+    expand = c(.001, .001)
+  ) +
+  scale_color_manual(values = col_palette) +
+  labs(y = "W", x = "Generation") +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    axis.ticks = element_line(colour = "black", size = .8),
+    axis.ticks.length.x = unit(8, "pt"),
+    axis.ticks.length.y = unit(10, "pt"),
+    axis.text = element_text(size = 18, colour = "black"),
+    axis.title.x = element_text(
+      margin = margin(t = 10),
+      size = 24
+    ),
+    axis.title.y = element_text(
+      margin = margin(r = 10),
+      size = 24
+    ),
+    plot.margin = margin(15, 15, 20, 15),
+    legend.position = "none"
+  )
+
+p
+
+# ggsave(
+#   p,
+#   filename = "../../2023_transmission_of_model/analysis/output/figures/manuscript/illustrator/fig2/fig2_D_3.pdf",
+#   width = 6,
+#   height = 4
+# )
+```
 
 # grid of p / sd
 
@@ -303,6 +407,125 @@ df_plot %>%
 # TEST
 
 
+## Noise perf
+
+
+```{r}
+df <- read_csv("../data/test_noise_perf.csv")
+
+df_beta_distrib <- df |>
+  group_by(gen, alpha, beta, sd_perf) |>
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w),
+    .groups = "drop"
+  ) |>
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1,
+    w = (50*w + 50) / 100
+  ) |>
+  collect()
+```
+
+
+```{r}
+df_plot <- df_beta_distrib %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
+  filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
+  group_by(gen, transmission_quality, sd_perf) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(transmission_quality = as.factor(transmission_quality))
+
+
+df_plot %>%
+  ggplot( aes(
+    x = gen,
+    y = perf,
+    group = transmission_quality,
+    color = transmission_quality
+  )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
+  # geom_point(size = 5) +
+  # geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 1.1, linetype = "dashed") +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  labs(y = "Task Performance", x = "Generation") +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    legend.position = "bottom"
+  ) +
+  facet_wrap(~sd_perf)
+
+
+df_plot %>%
+  ggplot( aes(
+    x = gen,
+    y = model_knowledge,
+    group = transmission_quality,
+    color = transmission_quality
+  )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
+  # geom_point(size = 5) +
+  # geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  labs(y = "Model knowledge", x = "Generation") +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    legend.position = "bottom"
+  ) +
+  facet_wrap(~sd_perf)
+
+
+df_plot %>%
+  ggplot( aes(
+    x = gen,
+    y = w,
+    group = transmission_quality,
+    color = transmission_quality
+  )) +
+  geom_line(aes(color = transmission_quality), linewidth = 1) +
+  geom_hline(yintercept = 0.67, linetype = "dashed") +
+  # geom_point(size = 5) +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  labs(y = "W", x = "Generation") +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(colour = "black", size = .8),
+    legend.position = "bottom"
+  ) +
+  facet_wrap(~sd_perf)
+```
+
+
+##
 
 ```{r}
 df <- read_csv("../data/test_noise_2.csv")

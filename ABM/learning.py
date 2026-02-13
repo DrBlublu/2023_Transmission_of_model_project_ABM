@@ -2,13 +2,11 @@
 Module implementing learning in the agents.
 """
 
-
-import random
 import numpy as np
 import pandas as pd
 
 
-def learning(agents: pd.DataFrame, param_learning: dict) -> tuple: 
+def learning(agents: pd.DataFrame, param_learning: dict) -> tuple:
     """
     Learning function for agents.
     If agents are lucky to learn (based on prob in param_learning), they gain
@@ -26,11 +24,18 @@ def learning(agents: pd.DataFrame, param_learning: dict) -> tuple:
     agents_copy = agents.copy()
 
     mask = np.random.rand(len(agents)) <= param_learning["p"]
-    learning_values = np.random.normal(0, param_learning["sd"], size=len(agents))
-    agents_copy.loc[mask, "model_knowledge"] = (
-        (np.round(np.clip(agents.loc[mask, "model_knowledge"] + learning_values[mask], -1, 1) / 0.02) * 0.02).round(2)
+
+    learning_values = np.random.normal(
+        0,
+        param_learning["sd"],
+        size=len(agents)
     )
-    agents_copy.loc[mask, "w"] = (
-        np.clip(agents.loc[mask, "w"] + learning_values[mask], 0, 1).round(2)
-    )
+
+    new_knowledge = agents.loc[mask, "model_knowledge"] + learning_values[mask]
+    new_knowledge = np.clip(new_knowledge, -1, 1)
+    agents_copy.loc[mask, "model_knowledge"] = new_knowledge.round(2)
+
+    new_w = agents.loc[mask, "w"] + learning_values[mask]
+    agents_copy.loc[mask, "w"] = np.clip(new_w, -1, 1).round(2)
+
     return agents_copy

@@ -3,7 +3,6 @@ Module that run tournament selection.
 """
 
 import numpy as np
-import pandas as pd
 
 def tournament_selection(parents, k=4):
     """

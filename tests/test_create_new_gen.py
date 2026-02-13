@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 from ABM.create_new_gen import create_new_gen
 
 

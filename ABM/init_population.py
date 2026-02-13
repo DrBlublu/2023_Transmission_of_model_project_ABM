@@ -1,6 +1,5 @@
 """
-Module that initialize a population of N agents with random value for model knowledge
-and W
+Module that initialize a population based on participants data of N agents
 """
 
 import numpy as np
@@ -8,13 +7,11 @@ import pandas as pd
 
 def init_population(N, df_starting_population):
     """
-    Initalize a population of size n at gen 0.
+    Initalize a population of size n at gen 0 based on participants data.
 
     Args:
         n (int): number of agents.
-        model_knowledge_param (dict): parameters value for the model_knowledge
-          gaussian.
-        w_param (dict): parameters value for the w gaussian.
+        df_starting_population: pd.Dataframe containing the participants data.
     
     Returns:
         pop (pd.DataFrame): population dataframe with id, model_knowledge and w.

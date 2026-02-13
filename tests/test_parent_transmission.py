@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import pytest
 from ABM.parent_transmission import parent_transmission
 
 
@@ -24,18 +23,18 @@ def test_parent_transmission_shapes_and_types():
 
 def test_parent_transmission_values_clipped():
     """
-    Test that outputs are clipped to [0,1].
+    Test that outputs are clipped to [-1,1].
     All values in children_model_knowledge and children_w should lie between 0 and 1,
         assert np.all(children_model_knowledge >= 0) and np.all(children_model_knowledge <= 1).
     """
     np.random.seed(37)
-    agents = pd.DataFrame({"model_knowledge": [0.0, 1.0], "w": [0.0, 1.0]})
+    agents = pd.DataFrame({"model_knowledge": [-1.0, 1.0], "w": [-1.0, 1.0]})
     beta_params = {"alpha": 0.2, "beta": 0.2}
     children_model_knowledge, children_w = parent_transmission(agents, beta_params)
 
-    assert np.all(children_model_knowledge >= 0)
+    assert np.all(children_model_knowledge >= -1)
     assert np.all(children_model_knowledge <= 1)
-    assert np.all(children_w >= 0)
+    assert np.all(children_w >= -1)
     assert np.all(children_w <= 1)
 
 

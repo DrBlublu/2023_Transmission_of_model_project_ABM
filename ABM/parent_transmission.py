@@ -1,5 +1,5 @@
 """
-Module that add Gaussian noise to the tranmission of information from parents
+Module that add Beta noise to the tranmission of information from parents
 to children.
 """
 
@@ -28,11 +28,6 @@ def parent_transmission(agents: pd.DataFrame, beta_params: dict) -> tuple:
     )
 
     children_model_knowledge = agents["model_knowledge"] * noise
-    children_model_knowledge = np.round(children_model_knowledge / 0.02) * 0.02
-    children_model_knowledge = children_model_knowledge.round(2)
-
     children_w = agents["w"] * noise
-    children_w = np.round(children_w / 0.02) * 0.02
-    children_w = children_w.round(2)
 
     return children_model_knowledge, children_w

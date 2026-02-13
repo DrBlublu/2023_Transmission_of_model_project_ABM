@@ -1,5 +1,5 @@
 """
-Docstring for ABM.get_perf
+Module that get the performance of an agent based on its model knowledge & W.
 """
 
 def get_perf(perf_matrix, agent_model_knowledge, agent_w):

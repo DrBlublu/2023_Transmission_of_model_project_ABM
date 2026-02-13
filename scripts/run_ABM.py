@@ -1,5 +1,5 @@
 """
-Docstring for scripts.run_ABM
+Module that run the ABM.
 """
 
 from multiprocessing import Pool
@@ -14,25 +14,22 @@ from ABM.create_new_gen import create_new_gen
 from ABM.parent_transmission import parent_transmission
 from ABM.learning import learning
 
-perf_matrix = pd.read_csv("data/perf_matrix.csv")
+perf_matrix = pd.read_csv("results/perf_matrix.csv")
 df_starting_population = pd.read_csv("data/starting_population.csv")
+output_filename = "data_ABM.csv"
 
 
-N_SIM = 20
+N_SIM = 50
 N_GEN = 10
 N = 100
 K = 4
 
-l_beta = np.arange(1, 5.5, 0.5)
-l_alpha = np.arange(1, 5.5, 0.5)
 l_p = np.arange(0, 1.1, 0.2)
 l_sd = np.arange(0, 1.1, 0.2)
-
 
 eps = 1e-6
 l_beta  = np.array([eps, 1, 2, 3, 4, 5])
 l_alpha = np.array([eps, 1, 2, 3, 4, 5])
-
 
 
 param_grid = [
@@ -93,4 +90,4 @@ if __name__ == "__main__":
         )
 
     final_df = pd.concat(results, ignore_index=True)
-    final_df.to_csv("data/test_noise_2.csv", index=False)
+    final_df.to_csv("results/" + output_filename, index=False)

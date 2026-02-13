@@ -1,5 +1,5 @@
 """
-Simple module
+Module for initializing the transition function used in the simulation.py
 """
 
 

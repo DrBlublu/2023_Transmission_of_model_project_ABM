@@ -1,5 +1,6 @@
 """
-a
+Module that run the RL simulation of performance based 
+on fix values for model knowledge & W
 """
 
 from multiprocessing import Pool
@@ -93,4 +94,4 @@ if __name__ == "__main__":
     results = [item for sublist in all_results for item in sublist]
 
     df = pd.DataFrame(results, columns=["sim", "model_knowledge", "w", "perf", "perf_stake", "baseline_reward", "avg_reward"])
-    df.to_csv("data/simulation_results.csv", index=False)
+    df.to_csv("results/simulation_results.csv", index=False)

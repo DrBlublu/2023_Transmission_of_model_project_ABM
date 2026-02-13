@@ -1,5 +1,5 @@
-import numpy as np
 import random
+import numpy as np
 
 import pandas as pd
 from ABM.learning import learning
@@ -38,6 +38,6 @@ def test_learning_always_update_when_prob_one():
 
     assert (agents["model_knowledge"] != agents_bis["model_knowledge"]).all()
     assert (agents["w"] != agents_bis["w"]).all()
-    assert 0 <= (agents_bis["model_knowledge"]).all() <= 1
-    assert 0 <= (agents_bis["w"]).all() <= 1
+    assert -1 <= (agents_bis["model_knowledge"]).all() <= 1
+    assert -1 <= (agents_bis["w"]).all() <= 1
 
