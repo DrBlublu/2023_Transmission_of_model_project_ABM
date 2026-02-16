@@ -11,24 +11,12 @@ library(patchwork)
 library(arrow)
 ```
 
-
-# LOADING DATA
-
-
-```{r}
-# df <- open_dataset("../data/ABM_results")
-```
-
-
-```{r}
-# df |> head() |> collect()
-```
-
-
 # Fig 2.D
 
+
+Loading the data
 ```{r}
-df <- read_csv("../data/data_ABM.csv")
+df <- open_dataset("../results/data_ABM")
 
 df_beta_distrib <- df |>
   group_by(gen, p, sd, alpha, beta) |>
@@ -47,12 +35,15 @@ df_beta_distrib <- df |>
   collect()
 ```
 
+
 ## Fig 2.D.1 (task performance)
 ```{r}
 df_plot <- df_beta_distrib %>%
   filter(p == 0.2 & sd == 0.2) %>%
-  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
-  filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 2)) %>%
+  # filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
+  filter(transmission_quality %in% c(0, 0.25, 0.5, 0.75, 1)) %>%
+  
   group_by(gen, transmission_quality) %>%
   summarise(
     perf = mean(perf),
@@ -64,7 +55,7 @@ df_plot <- df_beta_distrib %>%
 
 col_palette <- c(
   "#020F02",  # darkest
-  "#083D07",
+  # "#083D07",
   "#0E6B0C",
   "#149911",  # base color
   "#6FAF6A",  # pale green
@@ -128,11 +119,14 @@ p
 
 
 
+
+
+
 ## Fig 2.D.2 (model knowledge)
 ```{r}
 df_plot <- df_beta_distrib %>%
   filter(p == 0.2 & sd == 0.2) %>%
-  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 2)) %>%
   filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
   group_by(gen, transmission_quality) %>%
   summarise(
@@ -212,7 +206,7 @@ p
 ```{r}
 df_plot <- df_beta_distrib %>%
   filter(p == 0.2 & sd == 0.2) %>%
-  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 2)) %>%
   filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
   group_by(gen, transmission_quality) %>%
   summarise(
@@ -286,12 +280,15 @@ p
 # )
 ```
 
-# grid of p / sd
+# SI. 
+
+## Parameter sweep grid of p / sd
 
 ```{r}
 df_plot <- df_beta_distrib %>%
-  mutate(transmission_quality = round(transmission_quality, digits = 1)) %>%
-  filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
+  mutate(transmission_quality = round(transmission_quality, digits = 2)) %>%
+  # filter(transmission_quality %in% c(0, 0.2, 0.4, 0.6, 0.8, 1)) %>%
+  filter(transmission_quality %in% c(0, 0.25, 0.5, 0.75, 1)) %>%
   group_by(gen, transmission_quality, p, sd) %>%
   summarise(
     perf = mean(perf),
@@ -403,6 +400,130 @@ df_plot %>%
 
 
 
+
+
+
+
+
+
+
+## Single run
+
+data loading
+```{r}
+df <- open_dataset("../results/data_ABM")
+
+df_single_run <- df |>
+  filter(p == 0.2 & sd == 0.2) |>
+  mutate(
+    transmission_quality = alpha / (alpha + beta),
+    variance = (alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)),
+    gen = gen + 1,
+    w = (50*w + 50) / 100
+  ) |>
+  filter(transmission_quality == 0.8) |>
+  collect()
+
+df_behaviour <- read.csv("../../2023_transmission_of_model/analysis/data/data_adv.csv")
+
+df_plot_behaviour <- df_behaviour %>%
+  group_by(gen) %>%
+  summarise(
+    perf = mean(score_corrected),
+    model_knowledge = mean(pl2_understanding)
+  ) %>%
+  mutate(type = "behaviour") %>%
+  mutate(sim = 99)
+```
+
+### Performance
+
+```{r}
+df_plot_all_run <- df_single_run %>%
+  group_by(gen, sim) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "run")
+
+df_plot_summary <- df_single_run %>%
+  group_by(gen) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "summary")
+
+df_plot <- bind_rows(df_plot_all_run, df_plot_summary, df_plot_behaviour)
+
+df_plot %>%
+  ggplot( 
+    aes(
+      x = gen,
+      y = perf,
+      linewidth = type,
+      color = type,
+      group = interaction(type, sim)
+    )
+  ) +
+  geom_line() +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_linewidth_manual(values = c(run = 0.3, summary = 1, behaviour = 1)) +
+  scale_color_manual(values = c(run = "grey", summary = "black", behaviour = "red")) +
+  theme_minimal()
+```
+
+
+### Model knowledge
+
+```{r}
+df_plot_all_run <- df_single_run %>%
+  group_by(gen, sim) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "run")
+
+df_plot_summary <- df_single_run %>%
+  group_by(gen) %>%
+  summarise(
+    perf = mean(perf),
+    model_knowledge = mean(model_knowledge),
+    w = mean(w)
+  ) %>%
+  mutate(type = "summary")
+
+df_plot <- bind_rows(df_plot_all_run, df_plot_summary, df_plot_behaviour)
+
+df_plot %>%
+  ggplot( 
+    aes(
+      x = gen,
+      y = model_knowledge,
+      linewidth = type,
+      color = type,
+      group = interaction(type, sim)
+    )
+  ) +
+  geom_line() +
+  scale_x_continuous(
+    limits = c(0.5, 10.5),
+    breaks = seq(1, 10, by = 1),
+    expand = c(.001, .001)
+  ) +
+  scale_linewidth_manual(values = c(run = 0.3, summary = 1, behaviour = 1)) +
+  scale_color_manual(values = c(run = "grey", summary = "black", behaviour = "red")) +
+  theme_minimal()
+```
 
 # TEST
 
